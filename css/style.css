@@ -1,0 +1,26 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  width: 720px;
+}
+
+video {
+  width: 100%;
+}
+
+#nav-bar {
+  background-color: white;
+}
+
+#main-row {
+  background-color: #111;
+}
+
+#logging-row {
+  background-color: #EEE;
+}

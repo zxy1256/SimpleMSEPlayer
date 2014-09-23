@@ -1,0 +1,13 @@
+{
+  "name": "SimpleHTML5Player",
+  "description": "A simple player using Media Source Extension",
+  "version": "0.0.0",
+  "homepage": "",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "amplify": "~1.1.2",
+    "underscore": "~1.6.0",
+    "jquery": "~2.1.1"
+  }
+}
