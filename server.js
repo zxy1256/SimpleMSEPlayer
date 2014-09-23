@@ -6,7 +6,7 @@ var server = express();
 
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded());
-server.use(serveStatic('public', {}));
+server.use(serveStatic('.', {}));
 
 server.post('*', function(req, res) {
   console.log(req.body.msg);

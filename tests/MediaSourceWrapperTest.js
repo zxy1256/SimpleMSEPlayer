@@ -64,7 +64,7 @@ describe('MediaSource', function() {
   };
 
   var tag, wrapper;
-  
+
   beforeEach(function(done) {
     tag = document.createElement('video');
     recordVideoElementEvents(tag);
@@ -76,7 +76,7 @@ describe('MediaSource', function() {
     it('sync should work', function(done) {
       wrapper.activate(tag, done)
     });
-    
+
     it('async should work', function(done) {
       var p = wrapper.activateAsync(tag);
 
@@ -97,10 +97,7 @@ describe('MediaSource', function() {
       var buffer = null;
 
       var addOneSourceBuffer = function() {
-        //buffer = wrapper.addSourceBuffer('video/mp4; codecs="avc1.4d4015"')
-       //buffer = wrapper.addSourceBuffer('video/mp4; codecs="avc1.4d401e"')
-
-        buffer = wrapper.addSourceBuffer('video/mp4')
+       buffer = wrapper.addSourceBuffer('video/mp4; codecs="avc1.4d401e"')
       }
 
       var checkExpectation = function() {
@@ -115,7 +112,7 @@ describe('MediaSource', function() {
     })
   });
 
-  describe('SourceBuffer.append', function(done) {
+  describe('Seeking cross a gap', function(done) {
     var videoBuffer = null;
     var audioBuffer = null;
     var setupIsDone = null;
@@ -124,53 +121,70 @@ describe('MediaSource', function() {
     var audioInitSegment = null;
     var audioMediaSegment = null;
 
+    var appendInit = function() {
+      log('Append Init')
+      return videoBuffer.appendAsync(videoInitSegment)
+        .then(audioBuffer.appendAsync(audioInitSegment));
+    };
+
+    var appendMedia = function() {
+      log('appendMedia')
+      return videoBuffer.appendAsync(videoMediaSegment1)
+        .then(audioBuffer.appendAsync(audioMediaSegment1));
+    };
+
+    var play = function() {
+      log('play')
+      tag.play();
+    };
+
+     var pause = function() {
+      log('pause')
+      tag.pause();
+    };
+
+    var seek = function(timeInSeconds) {
+      return function() {
+        log('seek')
+        log('tag.currentTime = ' + tag.currentTime)
+        tag.currentTime = timeInSeconds;
+        log('tag.currentTime = ' + tag.currentTime)
+      }
+    };
+
+    var wait = function(timeInSeconds) {
+      return function () {
+        return Q.delay(timeInSeconds * 1000)
+      }
+    };
+
+    var videoInitSegmentLoaded = get('../media/DVRVideo/v_init.mp4')
+        .then(function(data) {
+          videoInitSegment = data;
+        });
+    var videoMediaSegmentLoaded = get('../media/DVRVideo/v_seq0.mp4')
+        .then(function(data) {
+          videoMediaSegment1 = data;
+        });
+    var audioInitSegmentLoaded = get('../media/DVRVideo/a_init.mp4')
+        .then(function(data) {
+          audioInitSegment = data;
+        });
+    var audioMediaSegmentLoaded = get('../media/DVRVideo/a_seq0.mp4')
+        .then(function(data) {
+          audioMediaSegment1 = data;
+        });
+
     beforeEach(function(done) {
       videoBuffer = null;
       audioBUffer = null;
-      segments = [];
-      videoInitSegment = null;
-      videoMediaSegment1 = null;
-      audioInitSegment = null;
-      audioMediaSegment = null;
-
-      //var initSegmentLoaded = get('../media/wZHwpyXFB88_One_DVR_Video/itag135_init.mp4')
-      //var initSegmentLoaded = get('../media/226nssw-9Z4/itag134_seg1.mp4')
-      //var initSegmentLoaded = get('../media/226nssw-9Z4/itag134_init.mp4') 
-      var videoInitSegmentLoaded = get('../media/qkRE-NnFkaA/itag134_init.mp4')
-          .then(function(data) {
-            videoInitSegment = data;
-          });
-      
-      //var mediaSegmentLoaded = get('../media/wZHwpyXFB88_One_DVR_Video/itag135_seq263490.mp4') // Start time = 10870.023
-      //var mediaSegmentLoaded = get('../media/226nssw-9Z4/itag134_seg2.mp4')
-      //var mediaSegmentLoaded = get('../media/226nssw-9Z4/itag134_rest.mp4')
-      var videoMediaSegmentLoaded = get('../media/qkRE-NnFkaA/itag134_seq0.mp4') // start time 2145.016
-          .then(function(data) {
-            videoMediaSegment1 = data;
-          });
-
-      //var initSegmentLoaded = get('../media/wZHwpyXFB88_One_DVR_Video/itag135_init.mp4')
-      //var initSegmentLoaded = get('../media/226nssw-9Z4/itag134_seg1.mp4')
-      //var initSegmentLoaded = get('../media/226nssw-9Z4/itag134_init.mp4') 
-      var audioInitSegmentLoaded = get('../media/qkRE-NnFkaA/itag140_init.mp4')
-          .then(function(data) {
-            audioInitSegment = data;
-          });
-      
-      //var mediaSegmentLoaded = get('../media/wZHwpyXFB88_One_DVR_Video/itag135_seq263490.mp4') // Start time = 10870.023
-      //var mediaSegmentLoaded = get('../media/226nssw-9Z4/itag134_seg2.mp4')
-      //var mediaSegmentLoaded = get('../media/226nssw-9Z4/itag134_rest.mp4')
-      var audioMediaSegmentLoaded = get('../media/qkRE-NnFkaA/itag140_seq0.mp4') // start time 2145.016
-          .then(function(data) {
-            audioMediaSegment1 = data;
-          });
 
       var addSourceBuffer = function() {
-        videoBuffer = wrapper.addSourceBuffer('video/mp4; codecs="avc1.4d4015"');
-        audioBuffer = wrapper.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
-        //buffer = wrapper.addSourceBuffer('video/mp4; codecs="avc1.4d401e"');
+        audioBuffer = wrapper.addSourceBuffer(
+            'audio/mp4; codecs="mp4a.40.2"');
+        videoBuffer = wrapper.addSourceBuffer(
+            'video/mp4; codecs="avc1.4d401e"');
       };
-
       var mediaSourceIsReady = wrapper.activateAsync(tag)
         .then(addSourceBuffer);
 
@@ -178,89 +192,26 @@ describe('MediaSource', function() {
         videoInitSegmentLoaded,
         videoMediaSegmentLoaded,
         audioInitSegmentLoaded,
-        audioMediaSegmentLoaded,        
+        audioMediaSegmentLoaded,
         mediaSourceIsReady]);
+
       done();
     });
 
     it('should work', function(done) {
-      var appendInit = function() {
-        log('Append Init')
-        return videoBuffer.appendAsync(videoInitSegment)
-          .then(audioBuffer.appendAsync(audioInitSegment));
-      };
-
-      var appendMedia = function() {
-        log('appendMedia')
-        videoBuffer.setTimestampOffset(0);
-        audioBuffer.setTimestampOffset(0);
-        return videoBuffer.appendAsync(videoMediaSegment1)
-          .then(audioBuffer.appendAsync(audioMediaSegment1));
-      };
-
-      var appendMediaToTimeEqualsZero = function() {
-        //buffer.setTimestampOffset(-2145.01611328125);
-        log('appendMediaToTimeEqualsZero')
-        //videoBuffer.setTimestampOffset(-2145);
-        //audioBuffer.setTimestampOffset(-2145);
-        var videoData =  new DataView(videoMediaSegment1);
-        var audioData = new DataView(audioMediaSegment1);
-        var newVideo = BmffParser.rewriteFirstDecodeTime(videoData, -2146.016);
-        var newAudio = BmffParser.rewriteFirstDecodeTime(audioData, -2146.016);
-        return videoBuffer.appendAsync(newVideo)
-          .then(audioBuffer.appendAsync(newAudio));
-      }
-
-      var play = function() {
-        log('play')
-        tag.play();
-      };
-
-       var pause = function() {
-        log('pause')
-        tag.pause();
-      };     
-
-      var seek = function(timeInSeconds) {
-        return function() {
-          log('seek')
-          log('tag.currentTime = ' + tag.currentTime)
-          //tag.currentTime = 10;
-          //tag.currentTime = 10871;
-          //tag.currentTime = 2146;
-          tag.currentTime = timeInSeconds;
-          log('tag.currentTime = ' + tag.currentTime)
-        }
-      };
-
       var checkExpectation = function() {
         log('Checking expectation');
         expect(loggedEvents.length > 0).toBe(true);
         checkLoggedEvents(['loadstart']);
         log('All events: ' + loggedEvents.join(', '));
-      };
-
-      var wait = function(timeInSeconds) {
-        return function () {
-          return Q.delay(timeInSeconds * 1000)
-        }
+        done();
       };
 
       setupIsDone
         .then(appendInit)
-        .then(wait(1))
-        .then(appendMediaToTimeEqualsZero)
         .then(appendMedia)
-        .then(wait(1))
         .then(play)
-        .then(wait(7))
-        .then(seek(0))
-        .then(wait(7))
-        .then(pause)
-        .then(seek(2146))
-        .then(play)
-        //.then(wait(3))
-        //.then(play)
+        .then(seek(51))
         .then(wait(35))
         .then(checkExpectation)
         .catch(function(e) {
@@ -272,8 +223,6 @@ describe('MediaSource', function() {
           tag.pause();
           done();
         });
-
-      //setTimeout(checkExpectation, 4000);
     });
   });
 });
