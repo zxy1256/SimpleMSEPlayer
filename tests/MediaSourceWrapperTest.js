@@ -67,9 +67,13 @@ describe('MediaSource Playback', function() {
 
   var tag, wrapper;
 
+
   beforeEach(function(done) {
     tag = document.getElementById('main-video');
+    tag.pause();
+    tag.src = null;
     recordVideoElementEvents(tag);
+    loggedEvents = [];
     wrapper = new MediaSourceWrapper(tag);
     done();
   });
@@ -219,12 +223,11 @@ describe('MediaSource Playback', function() {
         .then(play)
         .then(seek(51))
         .then(wait(10))
-        .then(checkExpectation)
         .catch(function(e) {
           log(e.message)
         })
         .fin(function() {
-          log('Done.')
+          checkExpectation();
           tag.pause();
           done();
         });
@@ -248,12 +251,11 @@ describe('MediaSource Playback', function() {
         .then(wait(1))
         .then(play)
         .then(wait(10))
-        .then(checkExpectation)
         .catch(function(e) {
           log(e.message)
         })
         .fin(function() {
-          log('Done.')
+          checkExpectation();
           tag.pause();
           done();
         });
