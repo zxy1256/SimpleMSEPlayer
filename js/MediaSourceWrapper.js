@@ -3,8 +3,12 @@
  */
 
 var MediaSourceWrapper = function() {
-  this.mediaSource_ = MediaSourceWrapper.createMediaSource();
-  this.videoBuffer_ = null;
+  if (window['MediaSource'] || window['WebKitMediaSource']) {
+    this.mediaSource_ = MediaSourceWrapper.createMediaSource();
+    this.videoBuffer_ = null;
+  } else {
+    throw new Error('MediaSource unsupported');
+  }
 }
 
 MediaSourceWrapper.createMediaSource = function() {
