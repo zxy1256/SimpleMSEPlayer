@@ -65,8 +65,36 @@ describe('MediaSource Playback', function() {
     });
   };
 
-  var tag, wrapper;
+  var countEvent = function(targetEvt) {
+    return filterEvent(targetEvt).length;
+  }
 
+  var play = function() {
+    log('play');
+    tag.play();
+  };
+
+   var pause = function() {
+    log('pause');
+    tag.pause();
+  };
+
+  var seek = function(timeInSeconds) {
+    return function() {
+      log('seek');
+      log('tag.currentTime = ' + tag.currentTime);
+      tag.currentTime = timeInSeconds;
+      log('tag.currentTime = ' + tag.currentTime);
+    }
+  };
+
+  var wait = function(timeInSeconds) {
+    return function () {
+      return Q.delay(timeInSeconds * 1000);
+    }
+  };
+
+  var tag, wrapper;
 
   beforeEach(function(done) {
     tag = document.getElementById('main-video');
@@ -74,10 +102,13 @@ describe('MediaSource Playback', function() {
     tag.src = null;
     recordVideoElementEvents(tag);
     loggedEvents = [];
-    wrapper = new MediaSourceWrapper(tag);
+    wrapper = new MediaSourceWrapper();
     done();
   });
 
+  // ============================================
+  // Media Source
+  // ============================================
   describe('MediaSource', function(done) {
     beforeEach(function() {
       expect(wrapper.mediaSource_.readyState).toBe('closed');
@@ -89,7 +120,6 @@ describe('MediaSource Playback', function() {
           var checkExpectation = function() {
             expect(filterEvent('loadstart').length).toEqual(1);
             expect(wrapper.mediaSource_.readyState).toBe('open');
-            done();
           };
 
           wrapper.activateAsync(tag)
@@ -122,6 +152,27 @@ describe('MediaSource Playback', function() {
 
       beforeEach(function(done) {
         mediaSourceInOpenState = wrapper.activateAsync(tag).then(done);
+      });
+
+      describe('setting video tag src', function(done) {
+        it('should work?', function(done) {
+          var wrapper2 = new MediaSourceWrapper(tag);
+          var switchToMediaSource2 = function() {
+            return wrapper2.activateAsync(tag);
+          }
+
+          var checkExpectation = function() {
+            log('Checking expectation');
+            expect(filterEvent('error').length).toEqual(0);
+            log('All events: ' + loggedEvents.join(', '));
+            done();
+          };
+
+          mediaSourceInOpenState
+            .then(switchToMediaSource2)
+            .then(wait(1))
+            .fin(checkExpectation);
+        });
       });
 
       describe('addSourceBuffer', function(done) {
@@ -191,54 +242,14 @@ describe('MediaSource Playback', function() {
         });
       });
     });
-
   });
 
-  xdescribe('With init and media segment start from t > 0', function(done) {
+  // ============================================
+  // Video Tag
+  // ============================================
+  describe('VideoTag', function(done) {
     var videoBuffer = null;
     var audioBuffer = null;
-    var setupIsDone = null;
-    var videoInitSegment = null;
-    var videoMediaSegment1 = null;
-    var audioInitSegment = null;
-    var audioMediaSegment = null;
-
-    var appendInit = function() {
-      log('Append Init');
-      return videoBuffer.appendAsync(videoInitSegment)
-        .then(audioBuffer.appendAsync(audioInitSegment));
-    };
-
-    var appendMedia = function() {
-      log('appendMedia');
-      return videoBuffer.appendAsync(videoMediaSegment1)
-        .then(audioBuffer.appendAsync(audioMediaSegment1));
-    };
-
-    var play = function() {
-      log('play');
-      tag.play();
-    };
-
-     var pause = function() {
-      log('pause');
-      tag.pause();
-    };
-
-    var seek = function(timeInSeconds) {
-      return function() {
-        log('seek');
-        log('tag.currentTime = ' + tag.currentTime);
-        tag.currentTime = timeInSeconds;
-        log('tag.currentTime = ' + tag.currentTime);
-      }
-    };
-
-    var wait = function(timeInSeconds) {
-      return function () {
-        return Q.delay(timeInSeconds * 1000);
-      }
-    };
 
     var videoInitSegmentLoaded = get('../media/DVRVideo/v_init.mp4')
         .then(function(data) {
@@ -257,81 +268,224 @@ describe('MediaSource Playback', function() {
           audioMediaSegment1 = data;
         });
 
-    beforeEach(function(done) {
-      videoBuffer = null;
-      audioBUffer = null;
+    var addSourceBuffer = function() {
+      audioBuffer = wrapper.addSourceBuffer(
+          'audio/mp4; codecs="mp4a.40.2"');
+      videoBuffer = wrapper.addSourceBuffer(
+          'video/mp4; codecs="avc1.4d401e"');
+    };
 
-      var addSourceBuffer = function() {
-        audioBuffer = wrapper.addSourceBuffer(
-            'audio/mp4; codecs="mp4a.40.2"');
-        videoBuffer = wrapper.addSourceBuffer(
-            'video/mp4; codecs="avc1.4d401e"');
-      };
-      var mediaSourceIsReady = wrapper.activateAsync(tag)
-        .then(addSourceBuffer);
+    var setupIsDone = null;
+    var videoInitSegment = null;
+    var videoMediaSegment1 = null;
+    var audioInitSegment = null;
+    var audioMediaSegment = null;
 
-      setupIsDone = Q.all([
-        videoInitSegmentLoaded,
-        videoMediaSegmentLoaded,
-        audioInitSegmentLoaded,
-        audioMediaSegmentLoaded,
-        mediaSourceIsReady]);
+    var appendInit = function() {
+      log('Append Init');
+      return videoBuffer.appendAsync(videoInitSegment)
+        .then(audioBuffer.appendAsync(audioInitSegment));
+    };
 
-      done();
-    });
+    var appendMedia = function() {
+      log('appendMedia');
+      return videoBuffer.appendAsync(videoMediaSegment1)
+        .then(audioBuffer.appendAsync(audioMediaSegment1));
+    };
+    // ==========================================
+    describe('With nothing appended', function(done) {
+      it('should be in HAVE_NOTHING state', function() {
+        expect(tag.readyState).toBe(0);
+      });
 
-    it('should play if seek after play', function(done) {
-      var checkExpectation = function() {
-        log('Checking expectation');
-        expect(tag.paused).toBeFalsy();
-        expect(filterEvent('seeked').length).toEqual(1);
-        expect(filterEvent('timeupdate').length).toBeGreaterThan(2);
-        expect(filterEvent('error').length).toEqual(0);
-        log('All events: ' + loggedEvents.join(', '));
-        done();
-      };
+      describe('Setting src', function(done) {
+        it('should trigger loadstart', function(done) {
+          var checkExpectation = function() {
+            log('Checking expectation');
+            expect(countEvent('loadstart')).toEqual(1);
+            expect(countEvent('error')).toEqual(0);
+            expect(tag.readyState).toBe(0);
+            log('All events: ' + loggedEvents.join(', '));
+          };
 
-      setupIsDone
-        .then(appendInit)
-        .then(appendMedia)
-        .then(play)
-        .then(seek(51))
-        .then(wait(5))
-        .catch(function(e) {
-          log(e.message)
-        })
-        .fin(function() {
-          checkExpectation();
-          tag.pause();
-          done();
+          wrapper.activateAsync(tag)
+            .then(checkExpectation)
+            .catch(function(e) {
+              console.log(e.message);
+              expect(false).toBe(true);
+            })
+            .fin(done);
         });
-    });
+      });
 
-    it('should play if play after seek', function(done) {
-      var checkExpectation = function() {
-        log('Checking expectation');
-        expect(tag.paused).toBeFalsy();
-        expect(filterEvent('seeked').length).toEqual(1);
-        expect(filterEvent('timeupdate').length).toBeGreaterThan(2);
-        expect(filterEvent('error').length).toEqual(0);
-        log('All events: ' + loggedEvents.join(', '));
-        done();
-      };
-
-      setupIsDone
-        .then(appendInit)
-        .then(appendMedia)
-        .then(seek(51))
-        .then(play)
-        .then(wait(5))
-        .catch(function(e) {
-          log(e.message)
-        })
-        .fin(function() {
-          checkExpectation();
-          tag.pause();
-          done();
+      describe('Play', function(done) {
+        it('should change the paused state', function() {
+          tag.play();
+          expect(tag.paused).toBeFalsy();
         });
+      });
+
+      describe('Seek', function(done) {
+        it('should throw exception', function() {
+          var seekTo10 = function() {
+            tag.currentTime = 10;
+          }
+          expect(seekTo10).toThrow();
+        });
+      });
+    });
+    // ==========================================
+
+    // ==========================================
+    describe('With init segment', function(done) {
+      var initAppended = null;
+
+      beforeEach(function(done) {
+        videoBuffer = null;
+        audioBUffer = null;
+
+        var mediaSourceIsReady = wrapper.activateAsync(tag)
+          .then(addSourceBuffer);
+
+        setupIsDone = Q.all([
+          videoInitSegmentLoaded,
+          audioInitSegmentLoaded,
+          mediaSourceIsReady]);
+
+        initAppended = setupIsDone
+          .then(appendInit)
+          .then(wait(1))
+          .then(done);
+      });
+
+      it('should be in HAVE_METADATA state', function(done) {
+        var checkExpectation = function() {
+          log('Checking expectation');
+          expect(tag.readyState).toBe(1);
+          expect(countEvent('loadedmetadata')).toEqual(1);
+          expect(countEvent('error')).toEqual(0);
+          log('All events: ' + loggedEvents.join(', '));
+        };
+
+       initAppended
+          .catch(function(e) {
+            log(e.message)
+          })
+          .fin(function() {
+            checkExpectation();
+            tag.pause();
+            done();
+          });
+      });
+
+      describe('Setting src', function(done) {
+        it('should trigger loadstart', function(done) {
+          var checkExpectation = function() {
+            log('Checking expectation');
+            expect(countEvent('loadstart')).toEqual(2);
+            expect(countEvent('error')).toEqual(0);
+            expect(tag.readyState).toBe(0);
+            log('All events: ' + loggedEvents.join(', '));
+          };
+
+          var wrapper2 = new MediaSourceWrapper();
+
+          wrapper2.activateAsync(tag)
+            .then(checkExpectation)
+            .catch(function(e) {
+              console.log(e.message);
+              expect(false).toBe(true);
+            })
+            .fin(done);
+        });
+      });
+
+      describe('Seek', function(done) {
+        it('should change currentTime', function() {
+          tag.currentTime = 100000;
+          expect(tag.currentTime).toEqual(100000);
+        });
+      });
+    });
+    // ==========================================
+
+
+    // ==========================================
+    describe('With init and media segment start from t > 0', function(done) {
+      var appendedInitAndMedia = null;
+      beforeEach(function(done) {
+        videoBuffer = null;
+        audioBUffer = null;
+
+        var mediaSourceIsReady = wrapper.activateAsync(tag)
+          .then(addSourceBuffer);
+
+        setupIsDone = Q.all([
+          videoInitSegmentLoaded,
+          videoMediaSegmentLoaded,
+          audioInitSegmentLoaded,
+          audioMediaSegmentLoaded,
+          mediaSourceIsReady]);
+
+        appendedInitAndMedia = setupIsDone
+            .then(appendInit)
+            .then(appendMedia)
+            .then(done);
+      });
+
+      describe('Seek after Play', function(done) {
+        it('should not cause error', function(done) {
+          var checkExpectation = function() {
+            log('Checking expectation');
+            expect(tag.paused).toBeFalsy();
+            expect(filterEvent('seeked').length).toEqual(1);
+            expect(filterEvent('timeupdate').length).toBeGreaterThan(2);
+            expect(filterEvent('error').length).toEqual(0);
+            log('All events: ' + loggedEvents.join(', '));
+            done();
+          };
+
+          appendedInitAndMedia
+              .then(play)
+              .then(seek(51))
+              .then(wait(5))
+              .catch(function(e) {
+                log(e.message)
+              })
+              .fin(function() {
+                checkExpectation();
+                tag.pause();
+                done();
+              });
+        });
+      });
+
+      describe('Play after Seek', function(done) {
+        it('should not cause error', function(done) {
+          var checkExpectation = function() {
+            log('Checking expectation');
+            expect(tag.paused).toBeFalsy();
+            expect(filterEvent('seeked').length).toEqual(1);
+            expect(filterEvent('timeupdate').length).toBeGreaterThan(2);
+            expect(filterEvent('error').length).toEqual(0);
+            log('All events: ' + loggedEvents.join(', '));
+            done();
+          };
+
+          appendedInitAndMedia
+              .then(seek(51))
+              .then(play)
+              .then(wait(5))
+              .catch(function(e) {
+                log(e.message)
+              })
+              .fin(function() {
+                checkExpectation();
+                tag.pause();
+                done();
+              });
+        });
+      });
     });
   });
 });

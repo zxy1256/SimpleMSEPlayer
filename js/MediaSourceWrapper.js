@@ -2,7 +2,7 @@
  * @fileoverview Wrap MediaSource and return promise.
  */
 
-var MediaSourceWrapper = function(tag) {
+var MediaSourceWrapper = function() {
   this.mediaSource_ = MediaSourceWrapper.createMediaSource();
   this.videoBuffer_ = null;
 }
