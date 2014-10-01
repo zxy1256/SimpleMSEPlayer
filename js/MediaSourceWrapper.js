@@ -29,17 +29,12 @@ MediaSourceWrapper.prototype.activateAsync = function(videoTag) {
 };
 
 MediaSourceWrapper.prototype.addSourceBuffer = function(mimeTypeStr) {
-  try {
-    if (this.mediaSource_.addSourceBuffer) {
-      this.videoBuffer_ =
-        new SourceBufferWrapper(this.mediaSource_.addSourceBuffer(mimeTypeStr));
-    } else {
-      this.videoBuffer_ =
-        new SourceBufferWrapper(this.mediaSource_.webkitAddSourceBuffer(mimeTypeStr));
-    }
-  } catch (e) {
-    log(e);
-    return;
+  if (this.mediaSource_.addSourceBuffer) {
+    this.videoBuffer_ =
+      new SourceBufferWrapper(this.mediaSource_.addSourceBuffer(mimeTypeStr));
+  } else {
+    this.videoBuffer_ =
+      new SourceBufferWrapper(this.mediaSource_.webkitAddSourceBuffer(mimeTypeStr));
   }
   return this.videoBuffer_;
 };

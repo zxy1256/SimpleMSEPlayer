@@ -1,7 +1,7 @@
 describe('MediaSource Playback', function() {
   var loggedEvents = [];
 
-  jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
   var getBufferedRange_ = function() {
     var buffered = [];
@@ -78,123 +78,7 @@ describe('MediaSource Playback', function() {
     done();
   });
 
-  describe('MediaSource', function(done) {
-    beforeEach(function() {
-      expect(wrapper.mediaSource_.readyState).toBe('closed');
-    });
-
-    describe('In closed state', function(done) {
-      describe('setting video tag src', function(done) {
-        it('should change readyState to open', function(done) {
-          var checkExpectation = function() {
-            expect(filterEvent('loadstart').length).toEqual(1);
-            expect(wrapper.mediaSource_.readyState).toBe('open');
-            done();
-          };
-
-          wrapper.activateAsync(tag)
-            .then(checkExpectation)
-            .fin(function() {
-              done();
-            });
-        });
-      });
-
-      describe('addSourceBuffer', function() {
-        it('should throw INVALID_STATE_ERR', function() {
-          var addOneSourceBuffer = function() {
-           buffer = wrapper.addSourceBuffer('video/mp4; codecs="avc1.4d401e"')
-          };
-
-          expect(addOneSourceBuffer).toThrow();
-        });
-      });
-
-      describe('endOfStream', function() {
-        it('should throw INVALID_STATE_ERR', function() {
-          expect(wrapper.mediaSource_.endOfStream).toThrow();
-        })
-      })
-    });
-
-    describe('In open state', function(done) {
-      var mediaSourceInOpenState = null;
-
-      beforeEach(function(done) {
-        mediaSourceInOpenState = wrapper.activateAsync(tag).then(done);
-      });
-
-      describe('addSourceBuffer', function(done) {
-        it('should create a SourceBuffer if MIME type is valid', function(done) {
-          var buffer = null;
-
-          var addOneSourceBuffer = function() {
-           buffer = wrapper.addSourceBuffer('video/mp4; codecs="avc1.4d401e"')
-          };
-
-          var checkExpectation = function() {
-            expect(wrapper.mediaSource_.sourceBuffers).not.toBeNull();
-            expect(wrapper.mediaSource_.sourceBuffers.length).toEqual(1);
-            expect(buffer).not.toBeNull();
-            done();
-          };
-
-          mediaSourceInOpenState
-            .then(addOneSourceBuffer)
-            .then(checkExpectation)
-            .catch(function() {
-              done();
-            });
-        });
-      });
-
-      describe('endOfStream', function(done) {
-        it('should change state to ended', function(done) {
-          mediaSourceInOpenState
-            .then(function() {
-              expect(wrapper.mediaSource_.readyState).toBe('open');
-              wrapper.mediaSource_.endOfStream();
-              expect(wrapper.mediaSource_.readyState).toBe('ended')
-            })
-            .catch(function(e) {
-              console.log(e.message);
-            })
-            .fin(function() {
-              done();
-            });
-        });
-      });
-    });
-
-    describe('In ended state', function() {
-      var mediaSourceInEndedState = null;
-
-      beforeEach(function(done) {
-        mediaSourceInEndedState = wrapper.activateAsync(tag)
-            .then(wrapper.mediaSource_endOfStream)
-            .then(done);
-      });
-
-      describe('setting video tag src', function(done) {
-        it('should change readyState to open', function(done) {
-          var checkExpectation = function() {
-            expect(filterEvent('loadstart').length).toEqual(2);
-            expect(wrapper.mediaSource_.readyState).toBe('open');
-            done();
-          };
-
-          wrapper.activateAsync(tag)
-            .then(checkExpectation)
-            .fin(function() {
-              done();
-            });
-        });
-      });
-    });
-
-  });
-
-  xdescribe('With init and media segment start from t > 0', function(done) {
+  describe('With init and media segment start from t > 0', function(done) {
     var videoBuffer = null;
     var audioBuffer = null;
     var setupIsDone = null;
@@ -296,7 +180,7 @@ describe('MediaSource Playback', function() {
         .then(appendMedia)
         .then(play)
         .then(seek(51))
-        .then(wait(5))
+        .then(wait(10))
         .catch(function(e) {
           log(e.message)
         })
@@ -322,8 +206,9 @@ describe('MediaSource Playback', function() {
         .then(appendInit)
         .then(appendMedia)
         .then(seek(51))
+        .then(wait(1))
         .then(play)
-        .then(wait(5))
+        .then(wait(10))
         .catch(function(e) {
           log(e.message)
         })
