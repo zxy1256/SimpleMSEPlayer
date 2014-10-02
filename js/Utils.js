@@ -84,6 +84,13 @@ var _ = {
   }
 };
 
+
+function assert(condition, message) {
+  if (!condition) {
+      throw message || "Assertion failed";
+  }
+};
+
 // ========================================
 // Events/Pubsub
 // ========================================
@@ -109,8 +116,3 @@ var amplify = {
 };
 
 
-function assert(condition, message) {
-    if (!condition) {
-        throw message || "Assertion failed";
-    }
-}
