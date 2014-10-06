@@ -4,6 +4,12 @@ describe('MediaSourceV05API', function(done) {
   var segmentsLoaded = {};
   var id = '0';
 
+  var wait = function(timeInSeconds) {
+    return function () {
+      return Q.delay(timeInSeconds * 1000);
+    }
+  };
+
   if (videoTag.webkitSourceAddId) {
     spyOn(videoTag, 'webkitSourceAddId');
   } else {
@@ -60,6 +66,7 @@ describe('MediaSourceV05API', function(done) {
       // .then(append('v_17'))
       // .then(append('v_18'))
       .then(append('v_1'))
+      .then(wait(2))
       .fin(checkExpectations);
   });
 });
