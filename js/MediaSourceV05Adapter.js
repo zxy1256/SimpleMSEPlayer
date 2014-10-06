@@ -130,14 +130,9 @@ MediaSourceV05Adapter.prototype.removeSourceBuffer = function(buffer) {
     throw new Error('Invalid state');
   }
 
-  var i = 0;
-  for (i = 0; i < this.sourceBuffers_.length; i++) {
-    if (buffer === this.sourceBuffers_[i]) {
-      this.videoTag_.webkitSourceRemoveId(buffer.id);
-      this.sourceBuffers_[i] = null;
-      $(this.sourceBuffers).trigger('removeSourceBuffer');
-    }
-  }
+  this.videoTag_.webkitSourceRemoveId(buffer.id);
+  delete this.sourceBuffers_[buffer.id];
+  $(this.sourceBuffers).trigger('removeSourceBuffer');
 };
 
 
@@ -201,6 +196,15 @@ var SourceBufferV05Adapter = function(videoTag, id, parentMediaSource) {
 
   Object.defineProperty(this, 'buffered', {
     get: this.getBuffered_
+  });
+
+  // =============
+  // Public, but not part of MSE standard
+  // =============
+  Object.defineProperty(this, 'id', {
+    get: function() {
+      return this.id_;
+    }
   });
 };
 

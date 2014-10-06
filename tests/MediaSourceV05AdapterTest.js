@@ -1,12 +1,19 @@
 describe('MediaSourceV05Adapter', function() {
   var mediaSource = null;
   var videoTag = document.getElementById('main-video');
-  var validMIMEType = 'video/mp4';
+  var validMIMEType = 'video/mp4;  codecs="avc1.4d401e"';
   var invalidMIMEType = 'not_video/invalid_codec';
 
   beforeEach(function() {
     mediaSource = new MediaSourceV05Adapter();
   });
+
+
+  if (videoTag.webkitSourceAbort) {
+    spyOn(videoTag, 'webkitSourceAbort');
+  } else {
+    videoTag.webkitSourceAbort = jasmine.createSpy('webkitSourceAbort');
+  }
 
   if (videoTag.webkitSourceAddId) {
     spyOn(videoTag, 'webkitSourceAddId');
@@ -20,10 +27,16 @@ describe('MediaSourceV05Adapter', function() {
     videoTag.webkitSourceAppend = jasmine.createSpy('webkitSourceAppend');
   }
 
-  if (videoTag.webkitSourceAbort) {
-    spyOn(videoTag, 'webkitSourceAbort');
+  if (videoTag.webkitSourceEndOfStream) {
+    spyOn(videoTag, 'webkitSourceEndOfStream');
   } else {
-    videoTag.webkitSourceAbort = jasmine.createSpy('webkitSourceAbort');
+    videoTag.webkitSourceEndOfStream = jasmine.createSpy('webkitSourceEndOfStream');
+  }
+
+  if (videoTag.webkitSourceRemoveId) {
+    spyOn(videoTag, 'webkitSourceRemoveId');
+  } else {
+    videoTag.webkitSourceRemoveId = jasmine.createSpy('webkitSourceRemoveId');
   }
 
   describe('CLOSED state', function() {
@@ -105,7 +118,9 @@ describe('MediaSourceV05Adapter', function() {
     describe('removeSourceBuffer', function() {
       it('should remove the given sourceBuffer', function() {
         var sourceBuffer = mediaSource.addSourceBuffer(validMIMEType);
-        medianSource.removeSourceBuffer(sourceBuffer);
+        expect(mediaSource.sourceBuffers.length).toEqual(1);
+
+        mediaSource.removeSourceBuffer(sourceBuffer);
         expect(mediaSource.sourceBuffers.length).toEqual(0);
       });
     });
@@ -133,7 +148,7 @@ describe('MediaSourceV05Adapter', function() {
     var append = function(key) {
       return function() {
         var segmentLoaded = segmentsLoaded[key];
-        segmentLoaded.then(function(data) {
+        return segmentLoaded.then(function(data) {
           sourceBuffer.appendBuffer(data)
         });
       }
@@ -147,6 +162,8 @@ describe('MediaSourceV05Adapter', function() {
     load('v_init', baseUrl + 'itag136_init.mp4');
     load('v_16', baseUrl + 'itag136_seq900416.mp4');
     load('v_17', baseUrl + 'itag136_seq900417.mp4');
+    load('v_18', baseUrl + 'itag136_seq900418.mp4');
+
     var allSegmentsLoaded = Q.all(_.values(segmentsLoaded));
 
     beforeEach(function(done) {
@@ -163,12 +180,14 @@ describe('MediaSourceV05Adapter', function() {
           // expect(sourceBuffer.bufferred.length).toEqual(1);
           done();
         };
-        segmentsLoaded['v_init']
-          .then(function(data) {
-            sourceBuffer.appendBuffer(data);
-          })
+        
+        Q()
+          .then(append('v_init'))
+          .then(append('v_16'))
+          .then(append('v_17'))
+          .then(append('v_18'))
           .then(checkExpectations);
-      });      
+      });
     });
 
     describe('If mediaSource closed', function() {
