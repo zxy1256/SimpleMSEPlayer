@@ -25,8 +25,12 @@ describe('MediaSourceV05API', function() {
   var allSegmentsLoaded = Q.all(_.values(segmentsLoaded));
 
   beforeEach(function(done) {
+    var onOpen = function(e) {
+      videoTag.webkitSourceAddId(id, validMIMEType);
+      done();
+    }
+    videoTag.addEventListener('sourceopen', onOpen);
     videoTag.src = videoTag.mediaSourceURL;
-    allSegmentsLoaded.then(done);
   });  
 
   it('should be no gap', function(done) {
@@ -34,8 +38,6 @@ describe('MediaSourceV05API', function() {
       expect(videoTag.bufferred.length).toEqual(1);
       done();
     };
-
-    var sourceBuffer = videoTag.webkitSourceAddId('0', validMIMEType);
 
     allSegmentsLoaded
       .then(append('v_init'))
