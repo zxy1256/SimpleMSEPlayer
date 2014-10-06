@@ -44,12 +44,12 @@ describe('MediaSourceV05API', function(done) {
     videoTag.addEventListener('sourceopen', onOpen);
     videoTag.addEventListener('webkitsourceopen', onOpen);
     videoTag.src = videoTag.mediaSourceURL;
-    setTimeout(onOpen, 1000);
   });  
 
   it('should be no gap', function(done) {
     var checkExpectations = function() {
       expect(videoTag.buffered.length).toEqual(1);
+      expect(videoTag.readyState).toBeGreaterThan(0);
       done();
     };
 
