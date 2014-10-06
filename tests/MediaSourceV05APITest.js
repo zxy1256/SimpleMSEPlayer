@@ -1,4 +1,4 @@
-describe('MediaSourceV05API', function() {
+describe('MediaSourceV05API', function(done) {
   var videoTag = document.getElementById('main-video');
   var validMIMEType = 'video/mp4;  codecs="avc1.4d401e"';
   var segmentsLoaded = {};
@@ -30,6 +30,7 @@ describe('MediaSourceV05API', function() {
       done();
     }
     videoTag.addEventListener('sourceopen', onOpen);
+    videoTag.addEventListener('webkitsourceopen', onOpen);
     videoTag.src = videoTag.mediaSourceURL;
   });  
 
