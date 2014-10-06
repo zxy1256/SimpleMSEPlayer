@@ -4,11 +4,23 @@ describe('MediaSourceV05API', function(done) {
   var segmentsLoaded = {};
   var id = '0';
 
+  if (videoTag.webkitSourceAddId) {
+    spyOn(videoTag, 'webkitSourceAddId');
+  } else {
+    videoTag.webkitSourceAddId = jasmine.createSpy('webkitSourceAddId');
+  }
+
+  if (videoTag.webkitSourceAppend) {
+    spyOn(videoTag, 'webkitSourceAppend');
+  } else {
+    videoTag.webkitSourceAppend = jasmine.createSpy('webkitSourceAppend');
+  }
+
   var append = function(key) {
     return function() {
       var segmentLoaded = segmentsLoaded[key];
       return segmentLoaded.then(function(data) {
-        videoTag.webKitSourceAppend(id, data);
+        videoTag.webkitSourceAppend(id, data);
       });
     };
   };
@@ -32,11 +44,12 @@ describe('MediaSourceV05API', function(done) {
     videoTag.addEventListener('sourceopen', onOpen);
     videoTag.addEventListener('webkitsourceopen', onOpen);
     videoTag.src = videoTag.mediaSourceURL;
+    setTimeout(onOpen, 1000);
   });  
 
   it('should be no gap', function(done) {
     var checkExpectations = function() {
-      expect(videoTag.bufferred.length).toEqual(1);
+      expect(videoTag.buffered.length).toEqual(1);
       done();
     };
 
