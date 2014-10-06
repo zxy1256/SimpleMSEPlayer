@@ -43,7 +43,7 @@ describe('MediaSourceV05API', function(done) {
     }
     videoTag.addEventListener('sourceopen', onOpen);
     videoTag.addEventListener('webkitsourceopen', onOpen);
-    videoTag.src = videoTag.mediaSourceURL;
+    videoTag.src = videoTag.mediaSourceURL || videoTag.webkitMediaSourceURL;
   });  
 
   it('should be no gap', function(done) {
