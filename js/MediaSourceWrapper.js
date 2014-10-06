@@ -91,7 +91,10 @@ MediaSourceWrapper.endOfStreamError = {
 };
 
 
-
+MediaSourceWrapper.events = {
+  SOURCE_OPEN: 'sourceopen',
+  SOURCE_END: 'sourceended'
+}
 
 
 /**

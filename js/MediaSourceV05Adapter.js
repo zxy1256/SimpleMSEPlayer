@@ -116,8 +116,9 @@ MediaSourceV05Adapter.prototype.endOfStream = function(opt_error) {
   if (this.readyState_ != MediaSourceWrapper.readyStates.OPEN) {
     throw new Error('Invalid state');
   }
-  this.videoTag_.webkitSourceEndOfStream(opt_error);
   this.readyState_ = MediaSourceWrapper.readyStates.ENDED;
+  this.videoTag_.webkitSourceEndOfStream(opt_error);
+  $(this).trigger('sourceended');
 };
 
 
@@ -172,15 +173,26 @@ MediaSourceV05Adapter.prototype.setDuration_ = function(duration) {
 /**
  * This method should not be called directly.
  * Use MediaSource.addSourceBuffer to create a SourceBuffer.
- * @param {HTMLMediaElement} video
- * @param {number} id
+ * @param {HTMLMediaElement} videoTag 
+ * @param {string} id Id of this SourceBuffer
  * @param {MediaSourceV05Adapter} parentMediaSource
  * @constructor
  */
 var SourceBufferV05Adapter = function(videoTag, id, parentMediaSource) {
-  this.parentMediaSource_ = parentMediaSource;
-  this.videoTag_ = videoTag;
+  /**
+   * @private {string}
+   */
   this.id_ = id;
+
+  /**
+   * @private {MediaSourceV05Adapter}
+   */
+  this.parentMediaSource_ = parentMediaSource;
+
+  /**
+   * @private {HTMLMediaElement}
+   */
+  this.videoTag_ = videoTag;
 
   Object.defineProperty(this, 'timestampOffset', {
     get: this.getTimestampOffset_,
@@ -193,14 +205,18 @@ var SourceBufferV05Adapter = function(videoTag, id, parentMediaSource) {
 };
 
 
+/**
+ * @param {ArrayBuffer} data
+ */
 SourceBufferV05Adapter.prototype.appendBuffer = function(data) {
   this.videoTag_.webkitSourceAppend(this.id_, data);
 };
 
 
 SourceBufferV05Adapter.prototype.abort = function() {
-  this.videoTag_.webkitSourceAbort();
+  this.videoTag_.webkitSourceAbort(this.id_);
 };
+
 
 
 /**

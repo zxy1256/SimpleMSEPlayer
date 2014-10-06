@@ -8,9 +8,23 @@ describe('MediaSourceV05Adapter', function() {
     mediaSource = new MediaSourceV05Adapter();
   });
 
-  videoTag.webkitSourceAddId = jasmine.createSpy('webkitSourceAddId');
-  videoTag.webkitSourceAppend = jasmine.createSpy('webkitSourceAppend');
-  videoTag.webkitSourceAbort = jasmine.createSpy('webkitSourceAbort');
+  if (videoTag.webkitSourceAddId) {
+    spyOn(videoTag, 'webkitSourceAddId');
+  } else {
+    videoTag.webkitSourceAddId = jasmine.createSpy('webkitSourceAddId');
+  }
+
+  if (videoTag.webkitSourceAppend) {
+    spyOn(videoTag, 'webkitSourceAppend');
+  } else {
+    videoTag.webkitSourceAppend = jasmine.createSpy('webkitSourceAppend');
+  }
+
+  if (videoTag.webkitSourceAbort) {
+    spyOn(videoTag, 'webkitSourceAbort');
+  } else {
+    videoTag.webkitSourceAbort = jasmine.createSpy('webkitSourceAbort');
+  }
 
   describe('CLOSED state', function() {
     it('should in this state after creation', function() {
@@ -47,11 +61,31 @@ describe('MediaSourceV05Adapter', function() {
         expect(function() {mediaSource.duration = 1}).toThrow();
       });
     });
+
+    describe('endOfStream', function() {
+      it('should throw INVALID_STATE exception', function() {
+        expect(function() {mediaSource.endOfStream()}).toThrow();
+      });
+    });
+
+    describe('removeSourceBuffer', function() {
+      it('should throw INVALID_STATE exception', function() {
+        var sourceBuffer = new SourceBufferV05Adapter(videoTag, '1', mediaSource);
+        expect(function() {mediaSource.removeSourceBuffer(sourceBuffer)}).toThrow();       
+      });
+    });
   });
 
+  // ===================================================
   describe('OPEN state', function() {
     beforeEach(function() {
       mediaSource.attachVideoTag(videoTag);
+    });
+
+    describe('addSourceBuffer', function() {
+      it('should create a new SourceBufferV05Adapter', function() {
+        expect(mediaSource.addSourceBuffer(validMIMEType)).not.toBeNull();
+      });
     });
 
     describe('detachVideoTag', function() {
@@ -61,9 +95,32 @@ describe('MediaSourceV05Adapter', function() {
       });
     });
 
-    describe('addSourceBuffer', function() {
-      it('should create a new SourceBufferV05Adapter', function() {
-        expect(mediaSource.addSourceBuffer(validMIMEType)).not.toBeNull();
+    describe('endOfStream', function() {
+      it('should change state to ENDED', function() {
+        mediaSource.endOfStream();
+        expect(mediaSource.readyState).toBe('ended');
+      });
+    });
+
+    describe('removeSourceBuffer', function() {
+      it('should remove the given sourceBuffer', function() {
+        var sourceBuffer = mediaSource.addSourceBuffer(validMIMEType);
+        medianSource.removeSourceBuffer(sourceBuffer);
+        expect(mediaSource.sourceBuffers.length).toEqual(0);
+      });
+    });
+  });
+
+  // ===================================================
+  describe('ENDED state', function() {
+    beforeEach(function() {
+      mediaSource.attachVideoTag(videoTag);
+      mediaSource.endOfStream();
+    });
+
+    describe('endOfStream', function() {
+      it('should throw INVALID_STATE exception', function() {
+        expect(function() {mediaSource.endOfStream()}).toThrow();
       });
     });
   });
