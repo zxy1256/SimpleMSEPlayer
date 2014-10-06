@@ -1,5 +1,10 @@
 describe('MediaSourceV05API', function(done) {
   var videoTag = document.getElementById('main-video');
+  if (!videoTag.webkitSourceAddId) {
+    return;
+  }
+
+
   var validMIMEType = 'video/mp4;  codecs="avc1.4d401e"';
   var segmentsLoaded = {};
   var id = '0';
