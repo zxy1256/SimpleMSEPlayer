@@ -44,6 +44,6 @@ describe('MediaSourceV05API', function() {
       .then(append('v_16'))
       .then(append('v_17'))
       .then(append('v_18'))
-      .fin(checkExpectation);
+      .fin(checkExpectations);
   });
 });
