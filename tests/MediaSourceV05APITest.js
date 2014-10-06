@@ -29,11 +29,12 @@ describe('MediaSourceV05API', function(done) {
     segmentsLoaded[key] = get(url);
   };
 
-  var baseUrl = '../media/DVRVideo2/';
-  load('v_init', baseUrl + 'itag136_init.mp4');
-  load('v_16', baseUrl + 'itag136_seq900416.mp4');
-  load('v_17', baseUrl + 'itag136_seq900417.mp4');
-  load('v_18', baseUrl + 'itag136_seq900418.mp4');
+  // var baseUrl = '../media/DVRVideo2/';
+  // load('v_init', baseUrl + 'itag136_init.mp4');
+  // load('v_16', baseUrl + 'itag136_seq900416.mp4');
+  // load('v_17', baseUrl + 'itag136_seq900417.mp4');
+  // load('v_18', baseUrl + 'itag136_seq900418.mp4');
+  load('v_1', '../media/VOD1/v_1.mp4');
   var allSegmentsLoaded = Q.all(_.values(segmentsLoaded));
 
   beforeEach(function(done) {
@@ -54,10 +55,11 @@ describe('MediaSourceV05API', function(done) {
     };
 
     allSegmentsLoaded
-      .then(append('v_init'))
-      .then(append('v_16'))
-      .then(append('v_17'))
-      .then(append('v_18'))
+      // .then(append('v_init'))
+      // .then(append('v_16'))
+      // .then(append('v_17'))
+      // .then(append('v_18'))
+      .then(append('v_1'))
       .fin(checkExpectations);
   });
 });
