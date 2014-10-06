@@ -12,20 +12,21 @@
   <script type="text/javascript" src="../bower_components/jasmine/lib/jasmine-core/jasmine-html.js"></script>
   <script type="text/javascript" src="../bower_components/jasmine/lib/jasmine-core/boot.js"></script>
   <script type="text/javascript" src="../bower_components/q/q.js"></script>
+  <script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>
+  <script type="text/javascript" src="../bower_components/jquery/dist/jquery.min.js"></script>
 
   <!-- include utils here... -->
-  <script type="text/javascript" src="../js/helper.js"></script>
+  <script type="text/javascript" src="../js/TVDebugUtils.js"></script>
   <script type="text/javascript" src="../js/Utils.js"></script>
-  <script type="text/javascript" src="../js/bmffparser2.js"></script>
 
   <!-- include source files here... -->
-  <script type="text/javascript" src="../js/MediaSourceWrapper.js"></script>
+  <script type="text/javascript" src="../js/MediaSourceWrapper.js"></script>  
+  <script type="text/javascript" src="../js/MediaSourceV05Adapter.js"></script>
 
   <!-- include spec files here... -->
-  <script type="text/javascript" src="../tests/MediaSourceWrapperTest.js"></script>
 </head>
-
 <body>
   <video id="main-video" width="320" height="240"></video>
+  <script type="text/javascript" src="../tests/MediaSourceV05AdapterTest.js"></script>
 </body>
 </html>

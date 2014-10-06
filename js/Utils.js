@@ -75,19 +75,10 @@ var logToRemote = function(msg) {
   xhr.send('msg=' + encodeURIComponent(msg));
 };
 
-// ========================================
-// Misc
-// ========================================
-var _ = {
-  bind: function(func, obj) {
-    return func.bind(obj);
-  }
-};
-
 
 function assert(condition, message) {
   if (!condition) {
-      throw message || "Assertion failed";
+    // throw message || "Assertion failed";
   }
 };
 
