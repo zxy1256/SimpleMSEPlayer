@@ -72,6 +72,7 @@ describe('MediaSourceV05API', function(done) {
       // .then(append('v_17'))
       // .then(append('v_18'))
       .then(append('v_1'))
+      .then(function() {videoTag.play()})
       .then(wait(2))
       .fin(checkExpectations);
   });
