@@ -60,8 +60,8 @@ describe('MediaSourceV05API', function(done) {
 
   it('should be no gap', function(done) {
     var checkExpectations = function() {
-      //expect(videoTag.buffered.length).toEqual(1);
-      //expect(videoTag.readyState).toBeGreaterThan(0);
+      expect(videoTag.buffered.length).toEqual(1);
+      expect(videoTag.readyState).toBeGreaterThan(0);
       expect(videoTag.webkitSourceAppend.calls.count()).toEqual(1);
       done();
     };
